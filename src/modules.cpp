@@ -807,6 +807,7 @@ void UpdateDiskUsage(Bar &usage, int updateStrings)
 			for(int j = 0; j < numFormats; j++)
 			{
 				formatRegex = formats[j];
+				tempNum[j] = ParseUnits(usage.str[i].text, formats[j], tempNum[j]);
 				string tempString = ResizeNum(tempNum[j], "");
 				usage.str[i].text = boost::regex_replace(usage.str[i].text, formatRegex, tempString);
 			}
