@@ -37,6 +37,7 @@ Bar *Init()
 	#endif
 	
 	currentScreen = 0;
+	volume = -1;
 	
 	for(int i = 0; i < 10; i++)
 	{
@@ -63,12 +64,36 @@ Bar *Init()
 	
 	bars = ChangeScreen(0);
 	
+	
+// 	fontHeights[0] = 7;
+// 	fontHeights[1] = 7;
+// 	fontHeights[2] = 7;
+// 	fontWidths[0] = 6;
+// 	fontWidths[1] = 6;
+// 	fontWidths[2] = 6;
+// 	#else
 	fontHeights[0] = 5;
 	fontHeights[1] = 6;
 	fontHeights[2] = 7;
 	fontWidths[0] = 4;
 	fontWidths[1] = 5;
 	fontWidths[2] = 8;
+// 	#endif
+	
+	#ifdef KBRANCH_BOARD
+	fontWidths[1] = 6;
+	
+	weatherFile = popen("perl /home/kbranch/scripts/weather.pl", "r");
+	weather.ReadFromFile("/home/kbranch/pictures/weather3.bmp");
+	bigFont.ReadFromFile("/home/kbranch/pictures/bigfont.bmp");
+	
+	if(weatherFile)
+	{
+// 		CheckWeather();
+		fcntl(fileno(weatherFile), F_SETFL, fcntl(fileno(weatherFile), F_GETFL, 0) | O_NONBLOCK);
+	}
+	
+	#endif
 	
 	rotateDelay = 0;
 	
@@ -79,6 +104,10 @@ Bar *Init()
 	
 	#ifdef HAVE_LIBGTOP_2_0
 	glibtop_init();
+	#endif
+	
+	#ifdef KBRANCH_BOARD
+	LCDInit();
 	#endif
 	
 	if(configPath == "")
@@ -556,6 +585,7 @@ void InitBar(Bar &bar)
 	bar.oldRightWidth = 0;
 	bar.sectionNum = 0;
 	bar.manualLayout = 0;
+	bar.hideBorder = 0;
 }
 
 void InitButtonStrings(Bar *bars)
