@@ -20,8 +20,6 @@
 
 void LayoutBars(Bar *bars)
 {
-	int screenWidth = 160;
-	int screenHeight = 43;
 	int totalLineHeight = 0;
 	double lineSpacing = 0;
 	double currentLineY = 0;
@@ -282,7 +280,7 @@ void RepositionBar(Bar &bar)
 {
 	if(autoLayout && !bar.manualLayout)
 	{
-		int screenWidth = 160;
+// 		int screenWidth = 160;
 		int leftWidth = 0;
 		int rightWidth = 1;
 		int textChanged = 0;

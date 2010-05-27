@@ -26,6 +26,10 @@
 #include <config.h>
 #endif
 
+#define KBRANCH_BOARD
+#undef HAVE_LIBG15RENDER
+#undef HAVE_LIBG15DAEMON_CLIENT
+
 #include <iostream>
 #include <iomanip>
 #include <fstream>
@@ -47,6 +51,7 @@
 #include <netdb.h>
 #include <arpa/inet.h>
 #include <linux/soundcard.h>
+#include "EasyBMP.h"
 
 #ifdef HAVE_LIBSENSORS
 	#include <sensors/sensors.h>
@@ -59,6 +64,14 @@
 #else
 	enum { G15_KEY_L2 = 1<<23, G15_KEY_L3 = 1<<24, G15_KEY_L4 = 1<<25,
 		G15_KEY_L5 = 1<<26 };
+#endif
+
+#ifdef KBRANCH_BOARD
+	const int screenWidth = 128;
+	const int screenHeight = 64;
+#else
+	const int screenWidth = 160;
+	const int screenHeight = 43;
 #endif
 
 #ifdef HAVE_LIBGTOP_2_0
@@ -143,6 +156,7 @@ struct Bar
 	int numSensors;
 	int buttons[MAXSETTINGS];
 	int hideButton[MAXSETTINGS];
+	int hideBorder;
 	int numButtons;
 	int isLocal;
 	int oldLeftWidth;
@@ -201,6 +215,7 @@ EXTERN int fontHeights[3];
 EXTERN int fontWidths[3];
 EXTERN int lastOutErrors[10];
 EXTERN int lastInErrors[10];
+EXTERN int volume;
 EXTERN string lStrings[4];
 EXTERN string configPath;
 EXTERN string myName;
@@ -215,6 +230,32 @@ EXTERN Screen screens[MAXSCREENS];
 
 #if defined HAVE_LIBG15RENDER && defined HAVE_LIBG15DAEMON_CLIENT
 EXTERN g15canvas canvas;
+#endif
+
+#ifdef KBRANCH_BOARD
+void LCDInit();
+void LCDClear();
+void LCDFill();
+void LCDSetPixel(uint8_t x, uint8_t y, uint8_t value);
+void LCDDrawRect(int x1, int y1, int x2, int y2, int value, int fill);
+void LCDDrawBar(int x1, int y1, int x2, int y2, int border, long long int value, long long int max);
+void LCDPutCh(uint8_t ch, int charX, int charY, int size, int screen);
+void LCDPutStr(const char* str, int x, int y, int size);
+void ColorLCDPutStr(const char* str, int x, int y, int size);
+void LCDSendBuffer();
+unsigned int LCDGetInput();
+void LCDCleanup();
+void ColorLCDClear();
+void ColorLCDFill();
+void ColorLCDSendBuffer(guint64 timeout);
+void CheckWeather();
+void ColorLCDSetPixel(uint8_t x, uint8_t y, uint16_t value);
+void ColorLCDDrawImage(BMP image, int xDest, int yDest, int width, int height, int xOffset, int yOffset);
+void PutBitmapC(BMP bitmap, char character, int xDest, int yDest, int width, int height);
+
+EXTERN FILE *weatherFile;
+EXTERN BMP weather;
+EXTERN BMP bigFont;
 #endif
 
 Bar *Init();

@@ -48,6 +48,10 @@ int main(int argc, char *argv[])
 		{
 			if(i >= 10)
 			{
+				#ifdef KBRANCH_BOARD
+				CheckWeather();
+				#endif
+				
 				updateStrings = 1;
 				i = 0;
 			}
@@ -137,6 +141,17 @@ int main(int argc, char *argv[])
 		if(timeout < 0)
 			timeout = 0;
 		
+		#ifdef KBRANCH_BOARD
+		ColorLCDSendBuffer(timeout - 5000);
+		#endif
+		
+		currentTime = GetCurrentTime();
+		timeTaken = currentTime - startTime;
+		timeout = FRAME_TIME - timeTaken;
+		
+		if(timeout < 0)
+			timeout = 0;
+		
 		CheckNetwork(timeout);
 	}
 	
@@ -145,9 +160,10 @@ int main(int argc, char *argv[])
 
 void OutputReport(Bar *bars)
 {
-	#if defined HAVE_LIBG15RENDER && defined HAVE_LIBG15DAEMON_CLIENT
 	if(bars == NULL)
 		return;
+	
+	#if defined HAVE_LIBG15RENDER && defined HAVE_LIBG15DAEMON_CLIENT
 	
 	g15r_clearScreen(&canvas, G15_COLOR_WHITE);
 	
@@ -168,7 +184,8 @@ void OutputReport(Bar *bars)
 			int barHeight = bars[i].h / bars[i].numSubBars;
 			int extraPixel = bars[i].h % bars[i].numSubBars;
 			
-			g15r_drawBar(&canvas, bars[i].x, bars[i].y, bars[i].x + bars[i].w, bars[i].y + bars[i].h - 1, 1, 0, 100, 1);
+			if(!bars[i].hideBorder)
+				g15r_drawBar(&canvas, bars[i].x, bars[i].y, bars[i].x + bars[i].w, bars[i].y + bars[i].h - 1, 1, 0, 100, 1);
 			
 			for(int j = 0; j < bars[i].numSubBars; j++) // Draw individual sub bars
 			{
@@ -197,6 +214,60 @@ void OutputReport(Bar *bars)
 	g15_send(screen, (char*)canvas.buffer, G15_BUFFER_LEN);
 	
 	#endif
+	#ifdef KBRANCH_BOARD
+	
+	LCDClear();
+	
+	int stringPos[4] = { 0, 24, 84, 109 };
+	
+	for(int i = 0; i < numBars; i++)
+	{
+		if(bars[i].label.text.length() > 0)
+			LCDPutStr(bars[i].label.text.c_str(), bars[i].label.x, bars[i].label.y, bars[i].fontSize);
+		
+		for(int j = 0; j < bars[i].numStrings; j++) // Draw strings
+		{
+			LCDPutStr(bars[i].str[j].text.c_str(), bars[i].str[j].x, bars[i].str[j].y, bars[i].fontSize);
+// 			cout << bars[i].str[j].text.c_str() << endl;
+		}
+		
+		if(bars[i].hasBar)
+		{
+			int barHeight = bars[i].h / bars[i].numSubBars;
+			int extraPixel = bars[i].h % bars[i].numSubBars;
+			
+			if(!bars[i].hideBorder)
+				LCDDrawBar(bars[i].x, bars[i].y, bars[i].x + bars[i].w, bars[i].y + bars[i].h - 1, 1, 0, 100);
+			
+			for(int j = 0; j < bars[i].numSubBars; j++) // Draw individual sub bars
+			{
+				if(extraPixel && j == bars[i].numSubBars / 2)
+				{
+					LCDDrawBar(bars[i].x, bars[i].y + j * barHeight, bars[i].x + bars[i].w, bars[i].y + j * barHeight + barHeight, 0, bars[i].values[j], 100);
+				}
+				else if(extraPixel && j > bars[i].numSubBars / 2)
+				{
+					LCDDrawBar(bars[i].x, bars[i].y + j * barHeight + 1, bars[i].x + bars[i].w, bars[i].y + j * barHeight + barHeight, 0, bars[i].values[j], 100);
+				}
+				else
+				{
+					LCDDrawBar(bars[i].x, bars[i].y + j * barHeight, bars[i].x + bars[i].w, bars[i].y + j * barHeight + barHeight - 1, 0, bars[i].values[j], 100);
+				}
+			}
+			
+// 			cout << bars[i].x << ", " << bars[i].w  << endl;
+		}
+		
+		for(int j = 0; j < bars[i].numButtons; j++) // Draw LCD button strings
+		{
+			if(!bars[i].hideButton[j] && bars[i].buttons[j] > -1)
+				LCDPutStr(lStrings[bars[i].buttons[j]].c_str(), stringPos[bars[i].buttons[j]], screenHeight - 5, 0);
+		}
+	}
+	
+	LCDSendBuffer();
+	
+	#endif
 }
 
 Bar *CheckInput(Bar *bars)
@@ -207,13 +278,18 @@ Bar *CheckInput(Bar *bars)
 	
 	read(screen, &keyState, sizeof(keyState));
 	
+	#endif
+	#ifdef KBRANCH_BOARD
+	
+	keyState = LCDGetInput();
+	
+	#endif
+	
 	if(CheckButton(screens[currentScreen].button, keyState))
 		bars = ChangeScreen(currentScreen + 1);
 	
 	for(int i = 0; i < numBars; i++)
 		CheckBarInput(bars[i], keyState, 1);
-	
-	#endif
 	
 	for(int i = 0; i < 10; i++)
 	{
@@ -246,12 +322,16 @@ void CheckBarInput(Bar &bar, unsigned int keyState, int updateLocalStrings)
 						else
 							bar.timer.startTime += GetCurrentTime() - bar.timer.stopTime;
 						
+// 						ColorLCDFill();
+						
 						if(updateLocalStrings)
-							lStrings[bar.buttons[i]] = "pause";
+							lStrings[bar.buttons[i]] = "stop";
 					}
 					else
 					{
 						bar.timer.stopTime = GetCurrentTime();
+						
+// 						ColorLCDClear();
 						
 						if(updateLocalStrings)
 							lStrings[bar.buttons[i]]= "start";
@@ -484,13 +564,16 @@ int CheckButton(int button, unsigned int keyState)
 {
 	int pressed = 0;
 	
-	if(button == 0 && (keyState & G15_KEY_L2))
-		pressed = 1;
-	else if(button == 1 && (keyState & G15_KEY_L3))
-		pressed = 1;
-	else if(button == 2 && (keyState & G15_KEY_L4))
-		pressed = 1;
-	else if(button == 3 && (keyState & G15_KEY_L5))
+	#if defined HAVE_LIBG15RENDER && defined HAVE_LIBG15DAEMON_CLIENT
+	static int buttons[4] = { G15_KEY_L2, G15_KEY_L3, G15_KEY_L4, G15_KEY_L5 };
+	#elif defined KBRANCH_BOARD
+	static int buttons[4] = { (1<<0), (1<<1), (1<<2), (1<<3) };
+	#else
+	static int buttons[4];
+	return 0;
+	#endif
+	
+	if(keyState & buttons[button])
 		pressed = 1;
 	
 	return pressed;
@@ -562,6 +645,10 @@ void HandleSignal(int sig)
 			freeaddrinfo(outSockets[i].res);
 		}
 	}
+	
+	#ifdef KBRANCH_BOARD
+	LCDCleanup();
+	#endif
 	
 	signal(sig, SIG_DFL);
 	raise(sig);

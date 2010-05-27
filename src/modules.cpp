@@ -22,11 +22,16 @@ void UpdateVolume(Bar &bar, int updateStrings)
 {
 	if(bar.isLocal)
 	{
-		int volume = 0;
-		int fd = open(bar.devices[0].c_str(), O_RDONLY);
+// 		int volume = 0;
+		int fd = open(bar.devices[0].c_str(), O_RDWR);
 		
 		if(bar.isAvailable[bar.device])
 		{
+			if(volume >= 0)
+			{
+				ioctl(fd, MIXER_WRITE(bar.device - 1), &volume);
+			}
+			
 			ioctl(fd, MIXER_READ(bar.device - 1), &volume);
 			
 			if(bar.isStereo[bar.device])
@@ -39,6 +44,8 @@ void UpdateVolume(Bar &bar, int updateStrings)
 				bar.samples[0][0] = volume & 0xFF;
 				bar.samples[1][0] = volume & 0xFF;
 			}
+			
+			volume = -1;
 		}
 		
 		close(fd);

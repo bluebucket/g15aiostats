@@ -526,6 +526,10 @@ int LoadConfig(string path, int silent)
 						bars[currentBar].manualLayout = atoi(value.c_str());
 						linePop[currentLine]--;
 					}
+					else if(setting == "hideborder")
+					{
+						bars[currentBar].hideBorder = atoi(value.c_str());
+					}
 					else if(!silent && !quiet)
 					{
 						cerr << "Unknown setting \"" << setting << "\" at line " << configLineNum << ", skipping" << endl;
