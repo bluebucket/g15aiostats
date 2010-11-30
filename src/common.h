@@ -26,9 +26,9 @@
 #include <config.h>
 #endif
 
-#define KBRANCH_BOARD
-#undef HAVE_LIBG15RENDER
-#undef HAVE_LIBG15DAEMON_CLIENT
+//#define KBRANCH_BOARD
+//#undef HAVE_LIBG15RENDER
+//#undef HAVE_LIBG15DAEMON_CLIENT
 
 #include <iostream>
 #include <iomanip>
