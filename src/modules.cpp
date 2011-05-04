@@ -557,43 +557,58 @@ void UpdateCpuUsage(Bar &usage, int updateStrings)
 		static boost::regex re("cpu(\\d+)\\s+(\\d+)\\s+(\\d+)\\s+(\\d+)\\s+(\\d+)\\s+(\\d+)\\s+(\\d+)\\s+(\\d+)");
 		boost::cmatch result;
 		int coreNum = 0;
+		int barNum = 0;
 		
 		ifstream iFile("/proc/stat");
+		
+		float samplesPerBar = usage.numDevices / usage.numSubBars;
+		float samplesThisBar = 0;
 		
 		while(!iFile.eof() && !iFile.fail())
 		{
 			char line[256];
 			
-			iFile.getline(line, 256);
-			if(boost::regex_search(line, result, re))
+			samplesThisBar += samplesPerBar;
+			
+			guint64 tempTotal = 0;
+			guint64 tempIdle = 0;
+			
+			while(samplesThisBar >= 1 && !iFile.eof() && !iFile.fail())
 			{
-				string tempString[7];
-				string tempCore = "";
-				guint64 tempTotal = 0;
-				
-				tempCore = result[1];
-				coreNum = atoi(tempCore.c_str());
-				
-				for(int j = 2; j <= 8; j++)
+				iFile.getline(line, 256);
+				if(boost::regex_search(line, result, re))
 				{
-					tempString[j - 2] = result[j];
-					tempTotal += atof(tempString[j - 2].c_str());
+					string tempString[7];
+					string tempCore = "";
+					
+					tempCore = result[1];
+					coreNum = atoi(tempCore.c_str());
+					
+					for(int j = 2; j <= 8; j++)
+					{
+						tempString[j - 2] = result[j];
+						tempTotal += atof(tempString[j - 2].c_str());
+					}
+					
+					tempIdle += atof(tempString[IDLETIME].c_str()) + atof(tempString[IOTIME].c_str());
+					samplesThisBar -= 1;
+					
 				}
-				
-				guint64 tempIdle = atof(tempString[IDLETIME].c_str()) + atof(tempString[IOTIME].c_str());
-				
-				usage.samples[coreNum][1] = usage.samples[coreNum][0];
-				
-				if(tempTotal - usage.tempData[TOTAL][coreNum] == 0)
-					usage.samples[coreNum][0] = 0;
-				else
-					usage.samples[coreNum][0] = (1 - (tempIdle - usage.tempData[IDLE][coreNum]) / double((tempTotal - usage.tempData[TOTAL][coreNum]))) * 100;
-				
-				usage.numDevices = coreNum + 1;
-				
-				usage.tempData[TOTAL][coreNum] = tempTotal;
-				usage.tempData[IDLE][coreNum] = tempIdle;
 			}
+			
+			usage.samples[barNum][1] = usage.samples[barNum][0];
+			
+			if(tempTotal - usage.tempData[TOTAL][barNum] == 0)
+				usage.samples[barNum][0] = 0;
+			else
+				usage.samples[barNum][0] = (1 - (tempIdle - usage.tempData[IDLE][barNum]) / double((tempTotal - usage.tempData[TOTAL][barNum]))) * 100;
+			
+			usage.numDevices = coreNum + 1;
+			
+			usage.tempData[TOTAL][barNum] = tempTotal;
+			usage.tempData[IDLE][barNum] = tempIdle;
+			
+			barNum++;
 		}
 		
 		iFile.close();
@@ -604,7 +619,7 @@ void UpdateCpuUsage(Bar &usage, int updateStrings)
 		boost::regex formatRegex;
 		boost::cmatch result;
 		
-		int numFormats = 5;
+		int numFormats = 13;
 		double tempNum[numFormats];
 		string formats[numFormats];
 		
@@ -612,9 +627,18 @@ void UpdateCpuUsage(Bar &usage, int updateStrings)
 		formats[1] = "%core2";
 		formats[2] = "%core3";
 		formats[3] = "%core4";
-		formats[4] = "%avgcpu";
+		formats[4] = "%core5";
+		formats[5] = "%core6";
+		formats[6] = "%core7";
+		formats[7] = "%core8";
+		formats[8] = "%core9";
+		formats[9] = "%core10";
+		formats[10] = "%core11";
+		formats[11] = "%core12";
+		formats[12] = "%avgcpu";
 		
 		double temp = 0;
+		
 		for(int i = 0; i < usage.numSubBars; i++)
 		{
 			tempNum[i] = (usage.samples[i][0] + usage.samples[i][1]) / 2.0;
@@ -623,7 +647,7 @@ void UpdateCpuUsage(Bar &usage, int updateStrings)
 		
 		temp /= usage.numSubBars;
 		
-		tempNum[4] = temp;
+		tempNum[12] = temp;
 		
 		for(int i = 0; i < usage.numStrings; i++)
 		{

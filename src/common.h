@@ -90,7 +90,7 @@
 #define SECTOR_SIZE 512
 #define MAXSCREENS 10
 #define MAXBARS 50
-#define MAXSETTINGS 10
+#define MAXSETTINGS 20
 
 using namespace std;
 
@@ -127,7 +127,7 @@ struct Bar
 	double speeds[MAXSETTINGS];
 	double max[MAXSETTINGS];
 	double samples[MAXSETTINGS][2];
-	guint64 tempData[MAXSETTINGS][5];
+	guint64 tempData[MAXSETTINGS][MAXSETTINGS];
 	ScreenText str[MAXSETTINGS];
 	ScreenText label;
 	string timeFormat;

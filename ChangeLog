@@ -22,3 +22,11 @@ v0.22:
 	-Added a Manual config option that lets you set an individual bar to manual layout mode.  Bars with this option set have no effect on anything else on the screen.
 	-Added an AutoRotateDelay config option that will automatically switch screens after a specified delay.
 	
+v0.23:
+	-Added a "HideBorder" option that hides an individual bar's border.
+	-Added support for a custom LCD board in addition to the G15's LCD.
+	-Fixed a bug where units were being ignored for the Disk bar type.
+
+v0.24:
+	-Added support for up to 12 CPU threads.  When there are more threads than vertical pixels allocated to the bar, extra cores are averaged together to fit.
+	-Fixed the automake setup to actually detect correct include directories instead of the previous hard coded values.

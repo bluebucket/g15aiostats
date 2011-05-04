@@ -7,6 +7,14 @@ Copyright (C) 1994, 1995, 1996, 1999, 2000, 2001, 2002, 2004, 2005,
    This file is free documentation; the Free Software Foundation gives
 unlimited permission to copy, distribute and modify it.
 
+Required Libraries
+==================
+
+   libboost   - Required to compile
+   libgtop    - Optional, provides DiskSpace, Mem, Swap, and Net types
+   g15daemon  - Optional, provides G15 LCD support
+   lm_sensors - Optional, provides Sensor type
+
 Basic Installation
 ==================
 

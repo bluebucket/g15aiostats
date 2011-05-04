@@ -149,7 +149,7 @@ Bar *Init()
 				
 				ifstream iFile("/proc/stat");
 				
-				while(!iFile.eof() && !iFile.fail() && bars[j].numDevices < 5) // Detects the number of cores
+				while(!iFile.eof() && !iFile.fail() && bars[j].numDevices < MAXSETTINGS) // Detects the number of cores
 				{
 					char line[256];
 					
@@ -160,8 +160,12 @@ Bar *Init()
 				
 				iFile.close();
 				
-				bars[j].numSubBars = bars[j].numDevices - 1;
+				bars[j].numDevices -= 1;
+				bars[j].numSubBars = bars[j].numDevices;
 				bars[j].hasBar = 1;
+				
+				if(bars[j].numSubBars > bars[j].h)
+					bars[j].numSubBars = bars[j].h;
 				
 				for(int k = 0; k < bars[j].numSubBars; k++)
 					bars[j].max[k] = 100;
