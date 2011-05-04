@@ -1,0 +1,32 @@
+Changelog - G15AIOStats
+
+v0.1:
+	-Initial release.
+
+v0.2:
+	-Redesigned almost everything and added a massive number of new features.  See the new man page for details.
+
+v0.21:
+	-Switched to a proper automake setup instead of a hand written Makefile.
+	-Fixed a bug where the first sub-bar in a CPU bar was showing total CPU usage instead of just the first core.
+	-Added more string formats for the Mem and DiskSpace types.
+	-Added a Swap bar type.
+	-Added a new section to the man page.
+
+v0.22:
+	-Added a UserScript bar type.  See man page for details.
+	-Added a Volume bar type.
+	-Added separate Upload and Download bar types in addition to the existing Net type.
+	-boost_regex is now the only required dependency.  The configure script will detect and enable the other libraries if they're available.
+	-Added network support.  See man page for details.
+	-Added a Manual config option that lets you set an individual bar to manual layout mode.  Bars with this option set have no effect on anything else on the screen.
+	-Added an AutoRotateDelay config option that will automatically switch screens after a specified delay.
+	
+v0.23:
+	-Added a "HideBorder" option that hides an individual bar's border.
+	-Added support for a custom LCD board in addition to the G15's LCD.
+	-Fixed a bug where units were being ignored for the Disk bar type.
+
+v0.24:
+	-Added support for up to 12 CPU threads.  When there are more threads than vertical pixels allocated to the bar, extra cores are averaged together to fit.
+	-Fixed the automake setup to actually detect correct include directories instead of the previous hard coded values.

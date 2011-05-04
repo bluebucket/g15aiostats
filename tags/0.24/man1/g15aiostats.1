@@ -1,0 +1,349 @@
+.TH g15aiostats 1 "May 2011" "g15aiostats v0.24" G15AIOStats
+
+.SH NAME
+\fBg15aiostats\fR \- a flexible plugin for G15 keyboards
+.SH SYNOPSIS
+\fBg15aiostats\fR [OPTIONS]
+.SH DESCRIPTION
+\fBg15aiostats\fR is an LCD plugin for G15 keyboards that displays various system information including time and date, per-core CPU use, network transfer rates, disk transfer rates, filesystem usage, memory and swap usage, uptime, system load, and temperature/fan sensor data. \fBg15aiostats\fR also makes use of the G15's LCD buttons, supports up to 10 virtual screens, and can connect to other instances of the plugin over a network.  Most aspects of \fBg15aiostats\fR can be easily customized by the user via config files.
+.SH OPTIONS
+.TP
+.B \-c \fIpath\fR
+Read config from \fIpath\fR instead of \fI~/.g15aiostats.conf\fR.
+.TP
+.B \-h \fIaddress\fR
+Connect to \fIaddress\fR as a client.
+.TP
+.B \-p \fIport\fR
+Use \fIport\fR for all network connections.  Defaults to \fI5687\fR.
+.TP
+.B \-d
+Run in the background as a daemon.  This is the default.
+.TP
+.B \-f
+Run in the foreground instead of as a daemon.
+.TP
+.B \-q
+Run in quiet mode - suppresses all output.
+.TP
+.B \-l \fImixer path\fR
+Prints all available mixer devices for the specified mixer.
+.SH BAR TYPES
+.TP
+\fBCPU\fR
+Displays CPU usage.  The first four cores each get a sub-bar.  Cores beyond the fourth are currently ignored.
+.TP
+\fBNet\fR
+Displays network download (top sub-bar) and upload (bottom sub-bar) rates.  Maximum rates can be set in the configuration file.  A button assigned to this type will change the network interface being displayed when pressed.
+.TP
+\fBDownload\fR
+Displays network download rate.  Maximum rate can be set in the configuration file.  A button assigned to this type will change the network interface being displayed when pressed.
+.TP
+\fBUpload\fR
+Displays network upload rate.  Maximum rate can be set in the configuration file.  A button assigned to this type will change the network interface being displayed when pressed.
+.TP
+\fBDisk\fR
+Displays disk read (top sub-bar) and write (bottom sub-bar) rates and the percentage of time spent doing IO (middle sub-bar).  Maximum rates can be set in the configuration file.  A button assigned to this type will change the disk device being displayed when pressed.
+.TP
+\fBDiskSpace\fR
+Displays filesystem space usage.  Each \fBDevice\fR entry in the configuration file gets its own sub-bar.
+.TP
+\fBMem\fR
+Displays physical memory use, minus cache and buffers.
+.TP
+\fBSwap\fR
+Displays swap space usage.
+.TP
+\fBTime\fR
+Displays the current time and/or date.  This type does not have an actual bar associated with it.
+.TP
+\fBTimer\fR
+Displays a stop watch style timer.  The first button assigned to this type starts the timer, and the second stops it.  This type does not have an actual bar associated with it.
+.TP
+\fBSensor\fR
+Displays fan and temperature sensor data using \fBlm_sensors\fR.  The output of the \fBsensors\fR command can be used to configure this type.  This type does not have an actual bar associated with it.
+.TP
+\fBUptime\fR
+Displays system uptime information.  This type does not have an actual bar associated with it.
+.TP
+\fBLoadAvg\fR
+Displays system load average information.  This type does not have an actual bar associated with it.
+.TP
+\fBUserScript\fR
+Displays the output from a user specified command as a bar and/or text.  The command is expected to output the bar percentage (0-100) for each sub-bar followed by the text for each string.  All values must be on their own lines, and the output is read every 0.25 seconds.  Only the most recent set of values is used when the output is read, extras are discarded.  Can be configured with the \fBCommand\fR, \fBNumSubBars\fR, and \fBNumStrings\fR settings.
+.TP
+\fBVolume\fR
+Displays the current volume level for the specified device on the specified mixer.
+.SH CONFIGURATION
+\fBg15aiostats\fR first tries to read its configuration from \fI~/.g15aiostats.conf\fR (or a path specified with \fB-c\fR), then \fI/etc/g15aiostats.conf\fR, and finally attempts to create \fI~/.g15aiostats.conf\fR (or a path specified with \fB-c\fR).
+
+Configuration lines are fairly flexible, options and section names are case insensitive, and all whitespace and extraneous characters outside quotes are ignored.  Section names can contain any extra characters as long as the section name is somewhere between the two brackets.
+
+Relative changes can be specified with "+=" and "-=" instead of "=".  For example, 'Position += "2, 0"' would add two to the bar's X coordinate without affecting anything else on the screen.  Valid for options \fBPosition\fR, \fBLabelPosition\fR, \fBStringPosition\fR, and \fBWidth\fR.
+
+Units can be specified by adding a single unit character to the end of a value.  For example, 'ReadMax = "900K"' would set the current bar's maximum read value to 900,000 bytes per second.  Valid units are \fBK\fR, \fBM\fR, and \fBG\fR.
+
+Some options can be followed by a number ('\fBOptionName\fR(\fInum\fR)'). \fInum\fR specifies what number of that bar's \fBOptionName\fR is going to be modified.  For example, 'StringPosition3 = "80, 20"' would move the current bar's third string to (80, 20).
+
+.SS \fBGlobal Options\fR
+.TP
+\fBMyName\fR = "\fIname\fR"
+Sets the name of this instance of g15aiostats to \fIname\fR.  Used for identifying different machines when connecting over the network.  Defaults to the machine's hostname.
+.TP
+\fBConnectTo\fR = "\fIaddress\fR"
+Connect to \fIaddress\fR as a client as in the \fB-h\fR option.  Multiple \fBConnectTo\fR lines can be used to connect to multiple addresses.
+.TP
+\fBPort\fR = "\fIport\fR"
+Sets the port that will be used for all network connections as in the \fB-p\fR option.
+.TP
+\fBAutoRotateDelay\fR = "\fIvalue\fR"
+Automatically switches to the next screen after \fIvalue\fR seconds.
+.TP
+\fB[Screen]\fR
+Starts a new virtual screen section.
+.TP
+\fB[Newline]\fR
+Moves the next \fB[Bar]\fR section to a new line on the screen.  Two \fB[Bar]\fR sections without a \fB[Newline]\fR between them will share the same line.
+.TP
+\fB[Bar]\fR
+Starts a new bar section.
+.SS \fBScreen Options\fR
+.TP
+\fBNextScreenButton\fR = "\fInum\fR"
+Sets LCD button \fInum\fR to switch to the next virtual screen.
+.TP
+\fBLayout\fR = "\fIAuto\fR|\fIManual\fR"
+Sets the current screen to use either automatic or manual layout mode.  All position settings must be set by the user in manual mode.  Defaults to \fIAuto\fR.
+.SS \fBBar Options\fR
+.TP
+\fBType\fR = "\fIvalue\fR"
+Sets the current bar's type to \fIvalue\fR.  Valid types are \fBCPU\fR, \fBNet\fR, \fBDownload\fR, \fBUpload\fR, \fBDisk\fR, \fBMem\fR, \fBSwap\fR, \fBTime\fR, \fBTimer\fR, \fBSensor\fR, \fBUptime\fR, \fBLoadAvg\fR, \fBDiskSpace\fR, \fBUserScript\fR, and \fBVolume\fR.
+.TP
+\fBTimeFormat\fR = "\fIvalue\fR"
+Sets the current bar's time format to \fIvalue\fR.  See \fBstrftime\fR(3) for documentation.  Valid for type \fBTime\fR.  Defaults to "\fI%a %m/%d %I:%M:%S%P\fR".
+.TP
+\fBWidth\fR = "\fIvalue\fR"
+Sets the current bar's width to \fIvalue\fR.
+.TP
+\fBHeight\fR = "\fIvalue\fR"
+Sets the current bar's height to \fIvalue\fR.
+.TP
+\fBPosition\fR = "\fIx\fR, \fIy\fR"
+Sets the current bar's coordinates to (\fIx\fR, \fIy\fR).  Does not affect label or string positions.
+.TP
+\fBLabelPosition\fR = "\fIx\fR, \fIy\fR"
+Sets the selected label's coordinates to (\fIx\fR, \fIy\fR).  Does not affect bar or string positions.
+.TP
+\fBStringPosition\fR(\fInum\fR) = "\fIx\fR, \fIy\fR"
+Sets the selected string's coordinates to (\fIx\fR, \fIy\fR).  Does not affect bar or label positions.
+.TP
+\fBFontSize\fR = "\fISmall\fR|\fIMedium\fR|\fILarge\fR"
+Sets the font size for all text attached to the current bar to \fISmall\fR, \fIMedium\fR, or \fILarge\fR.  Defaults to \fISmall\fR.
+.TP
+\fBLabel\fR = "\fItext\fR"
+Sets the current bar's label to \fItext\fR.  Defaults to blank.
+.TP
+\fBLabelJustification\fR(\fInum\fR) = "\fILeft\fR|\fICenter\fR|\fIRight\fR"
+Sets the selected label's justification (relative to its bar) to \fILeft\fR, \fICenter\fR or \fIRight\fR.  Defaults to \fILeft\fR.
+.TP
+\fBStringJustification\fR(\fInum\fR) = "\fILeft\fR|\fICenter\fR|\fIRight\fR"
+Sets the selected string's justification (relative to its bar) to \fILeft\fR, \fICenter\fR or \fIRight\fR.
+.TP
+\fBStringFormat\fR(\fInum\fR) = "\fIvalue\fR"
+Sets the selected string format to \fIvalue\fR.  See the STRING FORMAT section for details.
+.TP
+\fB(Read|Download)Max\fR = "\fIvalue\fR"
+Sets the maximum value for the current bar's read/download sub-bar to \fIvalue\fR.  Valid for types \fBDisk\fR and \fBNet\fR.  Defaults to \fI900K\fR for \fBNet\fR and \fI50M\fR for \fBDisk\fR.
+.TP
+\fB(Write|Upload)Max\fR = "\fIvalue\fR"
+Sets the maximum value for the current bar's write/upload sub-bar to \fIvalue\fR.  Valid for types \fBDisk\fR and \fBNet\fR.  Defaults to \fI60K\fR for \fBNet\fR and \fI50M\fR for \fBDisk\fR.
+.TP
+\fBDefaultDevice\fR = "\fIvalue\fR"
+Sets the current bar's default device to \fIvalue\fR.  Device names exclude path information (\fIsda\fR instead of \fI/dev/sda\fR).  Available devices for the \fBVolume\fR type can be listed with the \fB-l\fR option.  Valid for types \fBDisk\fR, \fBNet\fR, and \fBVolume\fR.  Defaults to \fIeth0\fR for \fBNet\fR, \fIsda\fR for \fBDisk\fR, and \fIvol\fR for \fBVolume\fR.
+.TP
+\fBMixer\fR = "\fIpath\fR"
+Sets the current bar's mixer to \fIpath\fR.  Only valid for type \fBVolume\fR.  Defaults to "\fI/dev/mixer\fR"
+.TP
+\fBDevice\fR(\fInum\fR) = "\fIpath\fR"
+Sets the current bar's device to \fIpath\fR.  Each new device is displayed as a new sub-bar.  Unlike \fBDefaultDevice\fR, \fBDevice\fR requires the full path ("/dev/sda1" instead of "sda1").  \fIpath\fR can either be a disk device or a mount point.  Valid for type \fBDiskSpace\fR.  Defaults to "\fI/\fR".
+.TP
+\fBSensorType\fR(\fInum\fR) = "\fITemperature\fR|\fIFan\fR"
+Sets the selected sensor's type to \fITemperature\fR or \fIFan\fR.  Valid for type \fBSensor\fR.  Defaults to \fITemperature\fR.
+.TP
+\fBSensorDevice\fR(\fInum\fR) = "\fIvalue\fR"
+Sets the selected sensor's device number to \fIvalue\fR.  See \fBlm_sensors\fR for details.  Valid for type \fBSensor\fR.  Defaults to \fI0\fR.
+.TP
+\fBSensorNumber\fR(\fInum\fR) = "\fIvalue\fR"
+Specifies which sensor of the assigned type on the assigned device is used.  See \fBlm_sensors\fR for details.  Valid for type \fBSensor\fR.  Defaults to \fI0\fR.
+.TP
+\fBButton\fR(\fInum\fR) = "\fIbutton_num\fR"
+Sets LCD button \fIbutton_num\fR to interact with the current bar.  Valid for types \fBDisk\fR, \fBNet\fR, and \fBTimer\fR.
+.TP
+\fBHideButton\fR(\fInum\fR) = "\fI1\fR|\fI0\fR"
+Hides or unhides the displayed text for the selected button.  Does not affect the button's functionality.  Valid for types \fBDisk\fR, \fBNet\fR, and \fBTimer\fR.
+.TP
+\fBHideBorder\fR = "\fI1\fR|\fI0\fR"
+Hides or unhides the border around a bar.  Defaults to \fI0\fR.
+.TP
+\fBCommand\fR = "\fIpath\fR"
+Sets the command the bar will read to \fIpath\fR.  Valid only for \fBUserScript\fR.
+.TP
+\fBNumSubBars\fR = "\fIvalue\fR"
+Sets the number of sub-bars the bar has to \fIvalue\fR.  Valid only for \fBUserScript\fR.
+.TP
+\fBNumStrings\fR = "\fIvalue\fR"
+Sets the number of strings the bar has to \fIvalue\fR.  Valid only for \fBUserScript\fR.
+.TP
+\fBManual\fR = "\fI1\fR|\fI0\fR"
+Sets an individual bar to manual layout mode.  Bars in manual mode are completely ignored by the auto layout system.
+.TP
+\fBSource\fR = "\fIname\fR"
+Sets the source of the bar's data to \fIname\fR.  Bars with a source specified will wait for an incoming connection from a remote instance of g15aiostats whose name is set to \fIname\fR, then use the data sent to it by the remote host.
+.SH STRING FORMAT
+\fBg15aiostats\fR allows the user to edit formatting strings for each bar, which alter the contents of text on the screen, similar to the \fBTimeFormat\fR option.  Each bar type searches for specific patterns in the \fBStringFormat\fR, and replaces them with the relevant values.  For example, setting a \fBNet\fR bar's \fBStringFormat\fR to "\fI%inrateM\fR" would result in the displayed text containing only that bar's download rate in MBps (e.g. "43.1").  Any text that doesn't match a pattern that the bar is looking for is left in place.  Setting the same \fBNet\fR bar's \fBStringFormat\fR to "\fI%inrateMMBps/%outrateMMBps\fR" would result in something like "43.1MBps/27.5MBps" being displayed on the screen.
+.SS Time
+Defaults to "\fI%time\fR".
+.TP
+\fB%time\FR
+Inserts the time and/or date as configured with \fBTimeFormat\fR.
+.SS CPU
+Defaults to "\fI%avgcpu%\fR".
+.TP
+\fB%core\fR\fInum\fR
+Inserts the percentage usage for core \fInum\fR (maximum 4).
+.TP
+\fB%avgcpu\fR
+Inserts the average CPU usage for all cores combined.
+.SS Net
+Defaults to two strings, "\fI%inrateKK\fR" and "\fI%outrateKK\fR".
+.TP
+\fB%inrate\fIU\fR
+Inserts the incoming (download) data rate in units \fIU\fR.
+.TP
+\fB%outrate\fIU\fR
+Inserts the outgoing (upload) data rate in units \fIU\fR.
+.SS Download
+Defaults to "\fI%inrateKK\fR".
+.TP
+\fB%inrate\fIU\fR
+Inserts the incoming (download) data rate in units \fIU\fR.
+.SS Upload
+Defaults to "\fI%outrateKK\fR".
+.TP
+\fB%outrate\fIU\fR
+Inserts the outgoing (upload) data rate in units \fIU\fR.
+.SS Disk
+Defaults to "\fI%diskact%\fR".
+.TP
+\fB%inrate\fIU\fR
+Inserts the incoming (read) data rate in units \fIU\fR.
+.TP
+\fB%outrate\fIU\fR
+Inserts the outgoing (write) data rate in units \fIU\fR.
+.TP
+\fB%diskact\fR
+Inserts the percentage of time spent waiting on IO.
+.SS Mem
+Defaults to "\fI%memuseMM\fR".
+.TP
+\fB%memuse\fIU\fR
+Inserts the amount of used physical memory (minus cache and buffer) in units \fIU\fR.
+.TP
+\fB%memuse%\fR
+Inserts the percentage of used physical memory (minus cache and buffer).
+.TP
+\fB%memfree\fIU\fR
+Inserts the amount of free physical memory (including cache and buffer) in units \fIU\fR.
+.TP
+\fB%memfree%\fR
+Inserts the percentage of free physical memory (including cache and buffer).
+.TP
+\fB%memtotal\fIU\fR
+Inserts the total amount of physical memory in units \fIU\fR.
+.SS Swap
+Defaults to "\fI%swapuseMM\fR".
+.TP
+\fB%swapuse\fIU\fR
+Inserts the amount of used swap space in units \fIU\fR.
+.TP
+\fB%swapuse%\fR
+Inserts the percentage of used swap space.
+.TP
+\fB%swapfree\fIU\fR
+Inserts the amount of free swap space in units \fIU\fR.
+.TP
+\fB%swapfree%\fR
+Inserts the percentage of free swap space.
+.TP
+\fB%swaptotal\fIU\fR
+Inserts the total amount of swap space in units \fIU\fR.
+.SS Timer
+Defaults to "\fI%timer\fR".
+.TP
+\fB%timer\fR
+Inserts the timer string ("00:00:00").
+.SS DiskSpace
+Defaults to "\fI%dev1used%%\fR".
+.TP
+\fB%dev\fInum\fR\fBfree\fIU\fR
+Inserts the free space on device number \fInum\fR in units \fIU\fR.
+.TP
+\fB%dev\fInum\fR\fBused\fIU\fR
+Inserts the used space on device number \fInum\fR in units \fIU\fR.
+.TP
+\fB%dev\fInum\fR\fBtotal\fIU\fR
+Inserts the total size of device number \fInum\fR in units \fIU\fR.
+.TP
+\fB%dev\fInum\fR\fB%\fR
+Inserts the percentage of used space on device number \fInum\fR.
+.TP
+\fB%dev\fInum\fR\fBfree%\fR
+Inserts the percentage of free space on device number \fInum\fR.
+.SS Uptime
+Defaults to "\fIup: %dd %H:%M\fR".
+.TP
+\fB%d\fR
+Inserts the number of days the system has been powered on.
+.TP
+\fB%H\fR
+Inserts the number of hours the system has been powered on.
+.TP
+\fB%M\fR
+Inserts the number of minutes the system has been powered on.
+.TP
+\fB%S\fR
+Inserts the number of seconds the system has been powered on.
+.TP
+\fB%idle\fR
+Inserts the percentage of time the system has been idle.
+.SS Sensor
+Defaults to "\fI%sens1\fR".
+.TP
+\fB%sens\fInum\fR
+Inserts the value of sensor \fInum\fR.
+.SS LoadAvg
+Defaults to "\fIload: %1m %5m %10m\fR".
+.TP
+\fB%1m\fR
+Inserts the load average over the last minute.
+.TP
+\fB%5m\fR
+Inserts the load average over the last 5 minutes.
+.TP
+\fB%10m\fR
+Inserts the load average over the last 10 minutes.
+.SS Volume
+Defaults to "\fI%avg%\fR".
+.TP
+\fB%left\fR
+Inserts the volume level for the left channel.
+.TP
+\fB%right\fR
+Inserts the volume level for the right channel.
+.TP
+\fB%avg\fR
+Inserts the average of the left and right volume levels.
+.SH AUTHOR
+Written by Steven Collins <\fIkbranch@kbranch.net\fR>.
+.SH BUGS
+\fBg15aiostats\fR has no known bugs, but there are almost certainly some lurking.  Please send bug reports and suggestions to <\fIkbranch@kbranch.net\fR>.
