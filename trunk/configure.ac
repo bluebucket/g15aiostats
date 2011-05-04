@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 #AC_PREREQ([2.64])
-AC_INIT(g15aiostats, 0.22, kbranch@kbranch.net)
+AC_INIT(g15aiostats, 0.24, kbranch@kbranch.net)
 AC_CONFIG_SRCDIR([src/common.h])
 AM_INIT_AUTOMAKE
 AM_CONFIG_HEADER([config.h])
